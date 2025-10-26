@@ -162,10 +162,17 @@ const App: React.FC = () => {
 
     useEffect(() => {
         if (aiMove !== null) {
-            const timer = setTimeout(() => {
-                animatedMakeMove(aiMove);
+            const performAiMove = async () => {
+                // Wait for the animation and move to complete
+                await animatedMakeMove(aiMove);
+                // Then clear the AI move state to prevent re-triggering
                 clearAiMove();
-            }, 500);
+            };
+    
+            const timer = setTimeout(() => {
+                performAiMove();
+            }, 500); // A small delay to make the AI's action feel deliberate
+    
             return () => clearTimeout(timer);
         }
     }, [aiMove, animatedMakeMove, clearAiMove]);
