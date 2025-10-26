@@ -1,0 +1,5 @@
+{
+  "name": "SantoKalah",
+  "description": "A web-based board game inspired by the traditional game of Kalah. Play against another person or challenge an AI opponent with three difficulty levels. Features a clean, thematic design and strategic gameplay.",
+  "requestFramePermissions": []
+}
