@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import Board from './components/Board';
 import StatusDisplay from './components/StatusDisplay';
@@ -13,7 +14,7 @@ import { Difficulty } from './types';
 import { TOTAL_PITS, PLAYER_1_KALAH, PLAYER_2_KALAH } from './constants';
 
 const App: React.FC = () => {
-    const { gameState, startGame, makeMove, isAiThinking, revertToHistoryState } = useKalahGame();
+    const { gameState, startGame, makeMove, isAiThinking, revertToHistoryState, resetGame } = useKalahGame();
     const [gameStarted, setGameStarted] = useState(false);
     const [movePreview, setMovePreview] = useState<number[] | null>(null);
     const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
@@ -24,9 +25,10 @@ const App: React.FC = () => {
     }, [startGame]);
 
     const handleNewGame = useCallback(() => {
+        resetGame();
         setGameStarted(false);
         setMovePreview(null);
-    }, []);
+    }, [resetGame]);
     
     const handlePitHover = (pitIndex: number) => {
         const { pits, currentPlayer, gameOver } = gameState;
@@ -65,8 +67,7 @@ const App: React.FC = () => {
             
             {gameState.gameOver && (
                  <GameOverOverlay
-                    winner={gameState.winner}
-                    player2Name={gameState.gameMode === 'PvAI' ? 'AI' : 'Player 2'}
+                    message={gameState.message}
                     score1={gameState.pits[PLAYER_1_KALAH]}
                     score2={gameState.pits[PLAYER_2_KALAH]}
                     onNewGame={handleNewGame}

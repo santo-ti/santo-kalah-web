@@ -17,6 +17,14 @@
       .font-cinzel {
         font-family: 'Cinzel', serif;
       }
+      @keyframes glowing-title {
+        0% { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 5px #f59e0b, 0 0 10px #f59e0b, 0 0 15px #f59e0b; }
+        50% { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 10px #fbbf24, 0 0 20px #fbbf24, 0 0 30px #fbbf24; }
+        100% { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 5px #f59e0b, 0 0 10px #f59e0b, 0 0 15px #f59e0b; }
+      }
+      .title-glow {
+        animation: glowing-title 4s ease-in-out infinite;
+      }
     </style>
   <script type="importmap">
 {

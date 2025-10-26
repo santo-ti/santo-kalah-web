@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface StatusDisplayProps {
@@ -6,12 +7,12 @@ interface StatusDisplayProps {
 
 const StatusDisplay: React.FC<StatusDisplayProps> = ({ message }) => {
     const renderHighlightedMessage = () => {
-        const parts = message.split(/(Player 1|Player 2|AI)/g);
+        const parts = message.split(/(Jogador 1|Jogador 2|IA)/g);
         return parts.map((part, index) => {
-            if (part === 'Player 1') {
+            if (part === 'Jogador 1') {
                 return <span key={index} className="text-amber-400 font-bold tracking-normal">{part}</span>;
             }
-            if (part === 'Player 2' || part === 'AI') {
+            if (part === 'Jogador 2' || part === 'IA') {
                 return <span key={index} className="text-stone-100 font-bold tracking-normal">{part}</span>;
             }
             return part;

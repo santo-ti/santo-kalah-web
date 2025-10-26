@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import type { GameState, Player, GameMode, MoveHistoryEntry } from '../types';
 import { Difficulty } from '../types';
@@ -13,7 +14,7 @@ const createInitialState = (): GameState => {
         currentPlayer: 'Player1',
         gameOver: false,
         winner: null,
-        message: "Player 1's Turn",
+        message: "Turno do Jogador 1",
         gameMode: null,
         difficulty: null,
         history: [],
@@ -25,13 +26,17 @@ export const useKalahGame = () => {
     const [gameState, setGameState] = useState<GameState>(createInitialState());
     const [isAiThinking, setIsAiThinking] = useState(false);
 
+    const resetGame = useCallback(() => {
+        setGameState(createInitialState());
+    }, []);
+
     const startGame = useCallback((mode: GameMode, difficulty?: Difficulty) => {
         const initialState = createInitialState();
         setGameState({
             ...initialState,
             gameMode: mode,
             difficulty: difficulty || null,
-            message: `New Game: ${mode}${difficulty ? ` (${difficulty})` : ''}. Player 1's Turn.`
+            message: `Novo Jogo: ${mode}${difficulty ? ` (${difficulty})` : ''}. Turno do Jogador 1.`
         });
     }, []);
 
@@ -63,14 +68,17 @@ export const useKalahGame = () => {
         const ownKalah = currentPlayer === 'Player1' ? PLAYER_1_KALAH : PLAYER_2_KALAH;
         const ownPits = currentPlayer === 'Player1' ? PLAYER_1_PITS : PLAYER_2_PITS;
         let nextPlayer: Player = currentPlayer === 'Player1' ? 'Player2' : 'Player1';
-        let message = `${nextPlayer}'s Turn`;
+        
+        const nextPlayerName = nextPlayer === 'Player1' ? 'Jogador 1' : (gameState.gameMode === 'PvAI' ? 'IA' : 'Jogador 2');
+        let message = `Turno do ${nextPlayerName}`;
         let lastCapture: GameState['lastCapture'] = null;
         let specialEvent: MoveHistoryEntry['specialEvent'] | undefined = undefined;
 
 
         if (currentPit === ownKalah) {
             nextPlayer = currentPlayer;
-            message = `${currentPlayer} gets another turn!`;
+            const currentPlayerName = currentPlayer === 'Player1' ? 'Jogador 1' : (gameState.gameMode === 'PvAI' ? 'IA' : 'Jogador 2');
+            message = `${currentPlayerName} joga de novo!`;
             specialEvent = { type: 'extra_turn' };
         } else if (ownPits.includes(currentPit) && newPits[currentPit] === 1) {
             const oppositePit = TOTAL_PITS - 2 - currentPit;
@@ -80,8 +88,8 @@ export const useKalahGame = () => {
                 newPits[currentPit] = 0;
                 newPits[ownKalah] += capturedStones;
                 
-                const playerName = currentPlayer === 'Player1' ? 'Player 1' : (gameState.gameMode === 'PvAI' ? 'AI' : 'Player 2');
-                message = `${playerName} captured ${capturedStones} stones!`;
+                const playerName = currentPlayer === 'Player1' ? 'Jogador 1' : (gameState.gameMode === 'PvAI' ? 'IA' : 'Jogador 2');
+                message = `${playerName} capturou ${capturedStones} pedras!`;
                 lastCapture = { from: currentPit, opposite: oppositePit, kalah: ownKalah };
                 specialEvent = { type: 'capture', count: capturedStones };
             }
@@ -119,7 +127,7 @@ export const useKalahGame = () => {
             ...prev,
             pits: historyEntry.boardState.pits,
             currentPlayer: historyEntry.boardState.currentPlayer,
-            message: `[VIEWING] After move ${historyIndex + 1}: ${historyEntry.boardState.message}`,
+            message: `[REVISANDO] Após jogada ${historyIndex + 1}: ${historyEntry.boardState.message}`,
             lastCapture: null, // Clear capture highlight when viewing history
         }));
     }, [gameState.gameOver, gameState.history]);
@@ -143,17 +151,17 @@ export const useKalahGame = () => {
             let winner: GameState['winner'] = null;
             let message = '';
             
-            const player2Name = gameState.gameMode === 'PvAI' ? 'AI' : 'Player 2';
+            const player2Name = gameState.gameMode === 'PvAI' ? 'IA' : 'Jogador 2';
 
             if (score1 > score2) {
                 winner = 'Player1';
-                message = `Player 1 Wins! ${score1} vs ${score2}`;
+                message = `Jogador 1 Vence!`;
             } else if (score2 > score1) {
                 winner = 'Player2';
-                message = `${player2Name} Wins! ${score2} vs ${score1}`;
+                message = `${player2Name} Vence!`;
             } else {
                 winner = 'draw';
-                message = `It's a Draw! ${score1} vs ${score1}`;
+                message = `É um Empate!`;
             }
 
             setGameState(prev => ({ ...prev, pits: finalPits, gameOver: true, winner, message, lastCapture: null }));
@@ -165,11 +173,12 @@ export const useKalahGame = () => {
     useEffect(() => {
         if (gameState.lastCapture) {
             const timer = setTimeout(() => {
-                setGameState(prev => ({ ...prev, lastCapture: null, message: `${prev.currentPlayer}'s Turn` }));
+                const nextPlayerName = gameState.currentPlayer === 'Player1' ? 'Jogador 1' : (gameState.gameMode === 'PvAI' ? 'IA' : 'Jogador 2');
+                setGameState(prev => ({ ...prev, lastCapture: null, message: `Turno do ${nextPlayerName}` }));
             }, 2000);
             return () => clearTimeout(timer);
         }
-    }, [gameState.lastCapture]);
+    }, [gameState.lastCapture, gameState.currentPlayer, gameState.gameMode]);
 
     useEffect(() => {
         if (!gameState.gameOver) {
@@ -179,7 +188,7 @@ export const useKalahGame = () => {
     
     const handleAiMove = useCallback(async () => {
         setIsAiThinking(true);
-        setGameState(prev => ({ ...prev, message: "AI is thinking..." }));
+        setGameState(prev => ({ ...prev, message: "IA está pensando..." }));
         setGameState(prev => ({...prev, lastCapture: null}));
         
         const move = await getAiMove(gameState, gameState.difficulty!);
@@ -203,5 +212,5 @@ export const useKalahGame = () => {
     }, [gameState.currentPlayer, gameState.gameMode, gameState.gameOver, isAiThinking, handleAiMove]);
 
 
-    return { gameState, startGame, makeMove, isAiThinking, revertToHistoryState };
+    return { gameState, startGame, makeMove, isAiThinking, revertToHistoryState, resetGame };
 };

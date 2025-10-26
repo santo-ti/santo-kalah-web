@@ -13,7 +13,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
             <div className="text-center mb-12">
-                <h1 className="text-6xl md:text-8xl font-bold text-amber-500 font-cinzel" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>
+                <h1 className="text-6xl md:text-8xl font-bold text-amber-500 font-cinzel title-glow">
                     SantoKalah
                 </h1>
                 <p className="text-stone-400 mt-2">The Ancient Game of Strategy</p>
