@@ -20,6 +20,7 @@ interface AnimatedStoneInfo {
     endX: number;
     endY: number;
     delay: number;
+    isCapture?: boolean;
 }
 
 const App: React.FC = () => {
@@ -58,6 +59,7 @@ const App: React.FC = () => {
                 endX: kalahRect.left + kalahRect.width / 2 - stoneSize / 2,
                 endY: kalahRect.top + kalahRect.height / 2 - stoneSize / 2,
                 delay: 0,
+                isCapture: true,
             });
 
             // The captured stones from opposite pit
@@ -69,6 +71,7 @@ const App: React.FC = () => {
                     endX: kalahRect.left + kalahRect.width / 2 - stoneSize / 2 + (Math.random() - 0.5) * (kalahRect.width * 0.3),
                     endY: kalahRect.top + kalahRect.height / 2 - stoneSize / 2 + (Math.random() - 0.5) * (kalahRect.height * 0.6),
                     delay: 50 + Math.random() * 200,
+                    isCapture: true,
                 });
             }
 
@@ -76,7 +79,7 @@ const App: React.FC = () => {
 
             setTimeout(() => {
                 setAnimatedStones([]);
-            }, 1400); // Animation duration + max delay + buffer
+            }, 1500); // Animation duration (800) + max delay (250) + buffer
         }
     }, [gameState.lastCapture, gameState.history]);
 
