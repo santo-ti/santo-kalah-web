@@ -9,9 +9,10 @@ interface BoardProps {
     movePreview: number[] | null;
     onPitHover: (index: number) => void;
     onPitLeave: () => void;
+    pitRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
 }
 
-const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, movePreview, onPitHover, onPitLeave }) => {
+const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, movePreview, onPitHover, onPitLeave, pitRefs }) => {
     const { pits, currentPlayer, lastCapture } = gameState;
 
     const isPitPlayable = (pitIndex: number, player: Player) => {
@@ -36,6 +37,7 @@ const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, move
                 onMouseLeave={() => playable && onPitLeave()}
             >
                 <Pit 
+                    ref={el => pitRefs.current[pitIndex] = el}
                     key={pitIndex} 
                     stones={pits[pitIndex]} 
                     onClick={() => onPitClick(pitIndex)} 
@@ -53,6 +55,7 @@ const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, move
         const isCaptureHighlight = lastCapture ? pitIndex === lastCapture.kalah : false;
         return (
              <Pit 
+                ref={el => pitRefs.current[pitIndex] = el}
                 stones={pits[pitIndex]} 
                 isKalah={true} 
                 label={label} 

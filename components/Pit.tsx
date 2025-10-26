@@ -12,7 +12,7 @@ interface PitProps {
     isCaptureHighlight?: boolean;
 }
 
-const Pit: React.FC<PitProps> = ({ stones, isKalah = false, onClick, label, isPlayable, isPlayerTurn = false, isMovePreview = false, isCaptureHighlight = false }) => {
+const Pit = React.forwardRef<HTMLDivElement, PitProps>(({ stones, isKalah = false, onClick, label, isPlayable, isPlayerTurn = false, isMovePreview = false, isCaptureHighlight = false }, ref) => {
     const borderColor = isPlayerTurn ? 'border-amber-400' : 'border-amber-900';
     const shadow = isPlayerTurn ? 'shadow-[0_0_12px_2px_rgba(251,191,36,0.5)]' : 'shadow-inner';
     const previewBg = isMovePreview ? 'bg-amber-800/60' : '';
@@ -28,6 +28,7 @@ const Pit: React.FC<PitProps> = ({ stones, isKalah = false, onClick, label, isPl
     return (
         <div className="flex flex-col items-center gap-2">
             <div 
+                ref={ref}
                 className={pitClasses} 
                 onClick={isPlayable && !isKalah ? onClick : undefined}
             >
@@ -45,6 +46,6 @@ const Pit: React.FC<PitProps> = ({ stones, isKalah = false, onClick, label, isPl
             <span className="text-sm font-semibold text-stone-400 font-cinzel">{label}</span>
         </div>
     );
-};
+});
 
 export default Pit;
