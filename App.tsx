@@ -23,12 +23,14 @@ interface AnimatedStoneInfo {
 }
 
 const App: React.FC = () => {
-    const { gameState, startGame, makeMove, isAiThinking, revertToHistoryState, resetGame } = useKalahGame();
+    const { gameState, startGame, makeMove, isAiThinking, setIsAiThinking, revertToHistoryState, resetGame, aiMove, clearAiMove } = useKalahGame();
     const [gameStarted, setGameStarted] = useState(false);
     const [movePreview, setMovePreview] = useState<number[] | null>(null);
     const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
     const pitRefs = useRef<(HTMLDivElement | null)[]>([]);
     const [animatedStones, setAnimatedStones] = useState<AnimatedStoneInfo[]>([]);
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [animatingSourcePit, setAnimatingSourcePit] = useState<number | null>(null);
 
     useEffect(() => {
         if (gameState.lastCapture) {
@@ -74,7 +76,7 @@ const App: React.FC = () => {
 
             setTimeout(() => {
                 setAnimatedStones([]);
-            }, 1200); // Animation duration + max delay + buffer
+            }, 1400); // Animation duration + max delay + buffer
         }
     }, [gameState.lastCapture, gameState.history]);
 
@@ -88,10 +90,94 @@ const App: React.FC = () => {
         setGameStarted(false);
         setMovePreview(null);
     }, [resetGame]);
+
+    const animatedMakeMove = useCallback(async (pitIndex: number) => {
+        const isAiTurn = gameState.currentPlayer === 'Player2' && gameState.gameMode === 'PvAI';
+        
+        setIsAnimating(true);
+        setAnimatingSourcePit(pitIndex);
+        
+        const stonesToMove = gameState.pits[pitIndex];
+        if (stonesToMove === 0) {
+            setIsAnimating(false);
+            setAnimatingSourcePit(null);
+            return;
+        }
+
+        const path: number[] = [];
+        let currentPit = pitIndex;
+        for (let i = 0; i < stonesToMove; i++) {
+            currentPit = (currentPit + 1) % TOTAL_PITS;
+            if (gameState.currentPlayer === 'Player1' && currentPit === PLAYER_2_KALAH) {
+                currentPit = (currentPit + 1) % TOTAL_PITS;
+            } else if (gameState.currentPlayer === 'Player2' && currentPit === PLAYER_1_KALAH) {
+                currentPit = (currentPit + 1) % TOTAL_PITS;
+            }
+            path.push(currentPit);
+        }
+
+        const newAnimatedStones: AnimatedStoneInfo[] = [];
+        const sourceRect = pitRefs.current[pitIndex]?.getBoundingClientRect();
+        if (!sourceRect) {
+            makeMove(pitIndex);
+            setIsAnimating(false);
+            setAnimatingSourcePit(null);
+            if(isAiTurn) setIsAiThinking(false);
+            return;
+        }
+
+        const stoneSize = 16;
+        const animationDelay = 80; // Slower delay between stones
+        const animationDuration = 650; // Slower flight time for each stone
+
+        for (let i = 0; i < stonesToMove; i++) {
+            const destPitIndex = path[i];
+            const destRect = pitRefs.current[destPitIndex]?.getBoundingClientRect();
+            if (destRect) {
+                newAnimatedStones.push({
+                    id: `sow-${pitIndex}-${i}-${Date.now()}`,
+                    startX: sourceRect.left + sourceRect.width / 2 - stoneSize / 2 + (Math.random() - 0.5) * 10,
+                    startY: sourceRect.top + sourceRect.height / 2 - stoneSize / 2 + (Math.random() - 0.5) * 10,
+                    endX: destRect.left + destRect.width / 2 - stoneSize / 2 + (Math.random() - 0.5) * 10,
+                    endY: destRect.top + (destRect.height / 2) - stoneSize / 2 + (Math.random() - 0.5) * 10,
+                    delay: i * animationDelay,
+                });
+            }
+        }
+        setAnimatedStones(newAnimatedStones);
+
+        const totalAnimationTime = (stonesToMove - 1) * animationDelay + animationDuration;
+        
+        await new Promise(resolve => setTimeout(resolve, totalAnimationTime));
+
+        makeMove(pitIndex);
+        setAnimatedStones([]);
+        setAnimatingSourcePit(null);
+        setIsAnimating(false);
+        if (isAiTurn) {
+            setIsAiThinking(false);
+        }
+
+    }, [gameState, makeMove, setIsAiThinking]);
+
+    useEffect(() => {
+        if (aiMove !== null) {
+            const timer = setTimeout(() => {
+                animatedMakeMove(aiMove);
+                clearAiMove();
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [aiMove, animatedMakeMove, clearAiMove]);
+
+    const handlePlayerMove = (pitIndex: number) => {
+        if (isAnimating || isAiThinking) return;
+        animatedMakeMove(pitIndex);
+    };
     
     const handlePitHover = (pitIndex: number) => {
         const { pits, currentPlayer, gameOver } = gameState;
-        if (gameOver || isAiThinking) return;
+        if (gameOver || isAiThinking || isAnimating) return;
 
         const isPlayer1Move = currentPlayer === 'Player1' && pitIndex >= 0 && pitIndex <= 5;
         const isPlayer2Move = currentPlayer === 'Player2' && pitIndex >= 7 && pitIndex <= 12 && gameState.gameMode === 'PvP';
@@ -148,12 +234,13 @@ const App: React.FC = () => {
                         <StatusDisplay message={gameState.message} />
                         <Board 
                             gameState={gameState} 
-                            onPitClick={makeMove} 
-                            isAiThinking={isAiThinking}
+                            onPitClick={handlePlayerMove} 
+                            isDisabled={isAiThinking || isAnimating}
                             movePreview={movePreview}
                             onPitHover={handlePitHover}
                             onPitLeave={handlePitLeave}
                             pitRefs={pitRefs}
+                            animatingSourcePit={animatingSourcePit}
                         />
                         <GameControls onNewGame={handleNewGame} />
                         <MoveHistory 

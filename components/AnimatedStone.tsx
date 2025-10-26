@@ -25,9 +25,9 @@ const AnimatedStone: React.FC<AnimatedStoneProps> = ({ startX, startY, endX, end
         top: startY,
         zIndex: 100,
         pointerEvents: 'none',
-        transform: isAnimating ? `translate(${endX - startX}px, ${endY - startY}px) scale(0.8)` : 'translate(0, 0) scale(1)',
+        transform: isAnimating ? `translate(${endX - startX}px, ${endY - startY}px) scale(0.9)` : 'translate(0, 0) scale(1)',
         opacity: isAnimating ? 0 : 1,
-        transition: `transform 0.8s cubic-bezier(0.4, 0, 0.8, 0.4), opacity 0.6s linear 0.2s`,
+        transition: `transform 0.65s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s linear 0.25s`,
     };
 
     return (

@@ -5,18 +5,19 @@ import type { GameState, Player } from '../types';
 interface BoardProps {
     gameState: GameState;
     onPitClick: (index: number) => void;
-    isAiThinking: boolean;
+    isDisabled: boolean;
     movePreview: number[] | null;
     onPitHover: (index: number) => void;
     onPitLeave: () => void;
     pitRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+    animatingSourcePit: number | null;
 }
 
-const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, movePreview, onPitHover, onPitLeave, pitRefs }) => {
+const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isDisabled, movePreview, onPitHover, onPitLeave, pitRefs, animatingSourcePit }) => {
     const { pits, currentPlayer, lastCapture } = gameState;
 
     const isPitPlayable = (pitIndex: number, player: Player) => {
-        if(gameState.gameOver || isAiThinking) return false;
+        if(gameState.gameOver || isDisabled) return false;
         if (currentPlayer !== player) return false;
         if (player === 'Player1' && pitIndex >= 0 && pitIndex <= 5 && pits[pitIndex] > 0) return true;
         if (player === 'Player2' && pitIndex >= 7 && pitIndex <= 12 && pits[pitIndex] > 0) {
@@ -37,7 +38,8 @@ const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, move
                 onMouseLeave={() => playable && onPitLeave()}
             >
                 <Pit 
-                    ref={el => pitRefs.current[pitIndex] = el}
+                    // FIX: Changed ref callback to use a block body to prevent implicitly returning a value, which is invalid for a ref callback.
+                    ref={el => { pitRefs.current[pitIndex] = el; }}
                     key={pitIndex} 
                     stones={pits[pitIndex]} 
                     onClick={() => onPitClick(pitIndex)} 
@@ -46,6 +48,7 @@ const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, move
                     isPlayerTurn={currentPlayer === player}
                     isMovePreview={movePreview?.includes(pitIndex) ?? false}
                     isCaptureHighlight={isCaptureHighlight}
+                    isAnimatingSource={animatingSourcePit === pitIndex}
                 />
             </div>
         );
@@ -55,7 +58,8 @@ const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, move
         const isCaptureHighlight = lastCapture ? pitIndex === lastCapture.kalah : false;
         return (
              <Pit 
-                ref={el => pitRefs.current[pitIndex] = el}
+                // FIX: Changed ref callback to use a block body to prevent implicitly returning a value, which is invalid for a ref callback.
+                ref={el => { pitRefs.current[pitIndex] = el; }}
                 stones={pits[pitIndex]} 
                 isKalah={true} 
                 label={label} 
@@ -76,7 +80,7 @@ const Board: React.FC<BoardProps> = ({ gameState, onPitClick, isAiThinking, move
 
                 <div className="flex flex-col gap-8">
                     {/* Player 2 Pits (Top row, reversed) */}
-                    <div className="flex gap-2 md:gap-4">
+                    <div className="flex gap-2 md:g_ap-4">
                         {[12, 11, 10, 9, 8, 7].map(i => renderPit(i, 'Player2', `P2-${13-i}`))}
                     </div>
                     {/* Player 1 Pits (Bottom row) */}

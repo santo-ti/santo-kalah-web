@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import type { GameState, Player, GameMode, MoveHistoryEntry } from '../types';
 import { Difficulty } from '../types';
@@ -25,6 +24,7 @@ const createInitialState = (): GameState => {
 export const useKalahGame = () => {
     const [gameState, setGameState] = useState<GameState>(createInitialState());
     const [isAiThinking, setIsAiThinking] = useState(false);
+    const [aiMove, setAiMove] = useState<number | null>(null);
 
     const resetGame = useCallback(() => {
         setGameState(createInitialState());
@@ -41,7 +41,7 @@ export const useKalahGame = () => {
     }, []);
 
     const makeMove = useCallback((pitIndex: number) => {
-        if (gameState.gameOver || isAiThinking) return;
+        if (gameState.gameOver) return;
 
         const { pits, currentPlayer } = gameState;
         const stones = pits[pitIndex];
@@ -115,7 +115,7 @@ export const useKalahGame = () => {
             history: [...prev.history, newHistoryEntry], 
             lastCapture 
         }));
-    }, [gameState, isAiThinking]);
+    }, [gameState]);
     
     const revertToHistoryState = useCallback((historyIndex: number) => {
         if (!gameState.gameOver) return;
@@ -193,24 +193,25 @@ export const useKalahGame = () => {
         
         const move = await getAiMove(gameState, gameState.difficulty!);
         
-        setTimeout(() => {
-            if (move !== -1) {
-                makeMove(move);
-            }
+        if (move !== -1) {
+            setAiMove(move);
+        } else {
             setIsAiThinking(false);
-        }, 500);
+        }
 
-    }, [gameState, makeMove]);
+    }, [gameState]);
+
+    const clearAiMove = useCallback(() => setAiMove(null), []);
 
     useEffect(() => {
-        if (gameState.gameMode === 'PvAI' && gameState.currentPlayer === 'Player2' && !gameState.gameOver && !isAiThinking) {
+        if (gameState.gameMode === 'PvAI' && gameState.currentPlayer === 'Player2' && !gameState.gameOver && !isAiThinking && !aiMove) {
              const timer = setTimeout(() => {
                 handleAiMove();
             }, 1000);
             return () => clearTimeout(timer);
         }
-    }, [gameState.currentPlayer, gameState.gameMode, gameState.gameOver, isAiThinking, handleAiMove]);
+    }, [gameState.currentPlayer, gameState.gameMode, gameState.gameOver, isAiThinking, aiMove, handleAiMove]);
 
 
-    return { gameState, startGame, makeMove, isAiThinking, revertToHistoryState, resetGame };
+    return { gameState, startGame, makeMove, isAiThinking, setIsAiThinking, revertToHistoryState, resetGame, aiMove, clearAiMove };
 };

@@ -10,9 +10,10 @@ interface PitProps {
     isPlayerTurn?: boolean;
     isMovePreview?: boolean;
     isCaptureHighlight?: boolean;
+    isAnimatingSource?: boolean;
 }
 
-const Pit = React.forwardRef<HTMLDivElement, PitProps>(({ stones, isKalah = false, onClick, label, isPlayable, isPlayerTurn = false, isMovePreview = false, isCaptureHighlight = false }, ref) => {
+const Pit = React.forwardRef<HTMLDivElement, PitProps>(({ stones, isKalah = false, onClick, label, isPlayable, isPlayerTurn = false, isMovePreview = false, isCaptureHighlight = false, isAnimatingSource = false }, ref) => {
     const borderColor = isPlayerTurn ? 'border-amber-400' : 'border-amber-900';
     const shadow = isPlayerTurn ? 'shadow-[0_0_12px_2px_rgba(251,191,36,0.5)]' : 'shadow-inner';
     const previewBg = isMovePreview ? 'bg-amber-800/60' : '';
@@ -32,11 +33,11 @@ const Pit = React.forwardRef<HTMLDivElement, PitProps>(({ stones, isKalah = fals
                 className={pitClasses} 
                 onClick={isPlayable && !isKalah ? onClick : undefined}
             >
-                <div className="absolute inset-0 grid grid-cols-3 gap-1 p-2 content-center justify-center">
+                <div className={`absolute inset-0 grid grid-cols-3 gap-1 p-2 content-center justify-center transition-opacity duration-200 ${isAnimatingSource ? 'opacity-0' : 'opacity-100'}`}>
                     {Array.from({ length: stones }).map((_, i) => <Stone key={i} />)}
                 </div>
                 {stones > 0 && (
-                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-stone-900/80 rounded-full w-8 h-8 md:w-9 md:h-9 flex items-center justify-center pointer-events-none border border-stone-500/50">
+                     <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-stone-900/80 rounded-full w-8 h-8 md:w-9 md:h-9 flex items-center justify-center pointer-events-none border border-stone-500/50 transition-opacity duration-200 ${isAnimatingSource ? 'opacity-0' : 'opacity-100'}`}>
                         <span className="text-lg font-bold text-white" style={{ textShadow: '1px 1px 2px black' }}>
                             {stones}
                         </span>
